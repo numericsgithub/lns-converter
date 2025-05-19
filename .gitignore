@@ -1,0 +1,7 @@
+__pycache__
+*.pyc
+data/
+*.png
+lnslinear
+.vscode
+settings.json
