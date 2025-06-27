@@ -5,8 +5,8 @@ from helpers import *
 msb_pos = 3
 lsb_pos = -1
 
-# todo Alle Zahlen die kleiner -1 sind müssen garantiert auf -1 "gerundet" werden. Genauso mit Zahlen größer 1
-linear_numbers = tf.where(linear_numbers < -1, -1.0, tf.where(linear_numbers > 1, 1.0, linear_numbers))
+# todo All numbers that are smaller than -1 have to be set to -1 ("rounding"). Same thing goes for +1 ...
+# linear_numbers = tf.where(linear_numbers < -1, -1.0, tf.where(linear_numbers > 1, 1.0, linear_numbers))
 print("Next step!")
 print("The logarithmic number has to be a fixed point number!")
 # Same procedure as before. No change here...

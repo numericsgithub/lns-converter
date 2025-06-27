@@ -2,8 +2,8 @@ import numpy as np
 import tensorflow as tf
 from helpers import *
 
-msb_pos = 3
-lsb_pos = -1
+msb_pos = 1
+lsb_pos = -4
 
 print("Next step!")
 print("The logarithmic number has to be a fixed point number!")
