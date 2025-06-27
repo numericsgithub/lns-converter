@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import tensorflow as tf
+
+from .QEnums import QuantizerLocation
 from .OperationLayer import OperationLayer
 from .QuantizerBase import NON_QUANT
 from .QuantizerBase import DEFAULT_DATATYPE
@@ -91,7 +93,7 @@ class PoolLayer(OperationLayer):
         return variables
 
 
-    def getQuantizers(self):
+    def getQuantizers(self, quant_location:QuantizerLocation=QuantizerLocation.EVERYWHERE):
         """get all quantizers of the layer.
 
         Returns:

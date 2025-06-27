@@ -4,6 +4,9 @@ import os
 import re
 from typing import List, Callable, TypeVar
 
+from .QEnums import QuantizerLocation
+
+
 T = TypeVar("T")
 
 class Reflectable:
@@ -50,7 +53,7 @@ class Reflectable:
         """
         return rf.setLoggerField(self, field_name=field_name, new_field_value=new_field_value, or_list=or_list, and_list=and_list)
 
-    def getQuantizers(self):
+    def getQuantizers(self, quant_location:QuantizerLocation=QuantizerLocation.EVERYWHERE):
         """
          gets all quantizers.
 

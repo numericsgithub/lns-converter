@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import tensorflow as tf
+from .QEnums import QuantizerLocation
 
-from . import CompositionLayer
 from .ComplexLayer import ComplexLayer
 from .Conv2DLayer import Conv2DLayer
 from .AddLayer import AddLayer
@@ -90,7 +90,7 @@ class ResidualBlockLayer(ComplexLayer):
             variables.extend(self.conv_short.getQuantVariables())
         return variables
 
-    def getQuantizers(self):
+    def getQuantizers(self, quant_location:QuantizerLocation=QuantizerLocation.EVERYWHERE):
         """get all quantizers of the layer.
 
         Returns:

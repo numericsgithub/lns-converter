@@ -2,7 +2,7 @@
 
 import tensorflow as tf
 
-from .FlexPointQuantizerNoClip import FlexPointQuantizerNoClip
+# from .FlexPointQuantizerNoClip import FlexPointQuantizerNoClip
 from .FlexPointQuantizer import FlexPointQuantizer
 from .Quantizer import Quantizer
 from .Variable import Variable
@@ -44,10 +44,10 @@ class RCCMQuantizer(Quantizer):
         self.__adder_type = adder_type
         self.leak_clip = tf.cast(leak_clip, DEFAULT_DATATYPE)
         self.__find_coeff_set_py_func = find_coeff_set_py_func
-        if pre_flex_bits != None:
-            self.preflex = FlexPointQuantizerNoClip(name + "_pre_flex_point", total_bits=pre_flex_bits)
-        else:
-            self.preflex = lambda x: x
+        # if pre_flex_bits != None:
+        #     self.preflex = FlexPointQuantizerNoClip(name + "_pre_flex_point", total_bits=pre_flex_bits)
+        # else:
+        #     self.preflex = lambda x: x
         self.sample_counter = tf.Variable(name=name + "_counter", initial_value=0, trainable=False, dtype=tf.int32)
         self.coeff = q_array
 
