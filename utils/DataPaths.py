@@ -65,7 +65,8 @@ def get_model_base_path(args):
     SAVE_PREFIX = {-1: lambda: None,
                    "float": lambda: f"data/training/{model_name}/float/{general_desc}/" + "{}",
                    "fixed": lambda: f"data/training/{model_name}/{quant_depth}_fixed/{weights_bits_total}w_{bias_bits_total}b_{activation_bits_total}a/{general_desc}/" + "{}",
-                   "adder": lambda: f"data/training/{model_name}/{quant_depth}_adder/{adder}_adder_{weights_bits_total}w_{bias_bits_total}b_{activation_bits_total}a/{general_desc}/" + "{}"}
+                   "adder": lambda: f"data/training/{model_name}/{quant_depth}_adder/{adder}_adder_{weights_bits_total}w_{bias_bits_total}b_{activation_bits_total}a/{general_desc}/" + "{}",
+                   "lns": lambda: f"data/training/{model_name}/{quant_depth}_lns/{weights_bits_total}w_{bias_bits_total}b_{activation_bits_total}a/{general_desc}/" + "{}"}
 
     model_base_path = SAVE_PREFIX[train_type]()
     return model_base_path

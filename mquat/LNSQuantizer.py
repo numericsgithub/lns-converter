@@ -25,7 +25,7 @@ class LNSQuantizer(Quantizer):
         leak_clip (float): Leak factor applied in backprop when clipping occurs.
     """
 
-    def __init__(self, name, format="sfix", lsb=-3, msb=1, channel_wise_scaling=False, scale_inputs=False, dtype=DEFAULT_DATATYPE, internal_dtype=tf.dtypes.float32):
+    def __init__(self, name, internal_quantizer, channel_wise_scaling=False, scale_inputs=False, dtype=DEFAULT_DATATYPE, internal_dtype=tf.dtypes.float32):
         # Initialize base Quantizer class with given parameters
         super().__init__(name, channel_wise_scaling=channel_wise_scaling, scale_inputs=scale_inputs, dtype=dtype)
 
@@ -38,10 +38,7 @@ class LNSQuantizer(Quantizer):
         
         # Attributes used in quant_forward (must be set properly)
         self.format = format
-        self.lsb = tf.Variable(lsb, trainable=False, dtype=self.internal_dtype,
-                                                    name=f"{name}_lsb")
-        self.msb = tf.Variable(msb, trainable=False, dtype=self.internal_dtype,
-                                                    name=f"{name}_msb")
+        self.internal_quantizer = internal_quantizer
 
     def getQuantVariables(self):
         """get all variables of the layer.
@@ -51,7 +48,7 @@ class LNSQuantizer(Quantizer):
                 list contains the weight and the bias Variable.
         """
         variables = []
-        variables.extend([self.lsb, self.msb])
+        variables.extend(self.internal_quantizer.getQuantVariables())
         return variables
 
     def quant_forward(self, inputs):
@@ -70,21 +67,9 @@ class LNSQuantizer(Quantizer):
         log_vals = tf.math.log(tf.abs(inputs) + 1e-6) / tf.math.log(2.0)
         signs = tf.where(inputs < 0, -1.0, 1.0)
 
-
-
-        scale_factor = 2 ** abs(self.lsb)
-        q_log = tf.floor(log_vals * scale_factor + 0.5) / scale_factor
-
-        min_val = -(2 ** (self.msb - 1))
-        max_val = 2 ** (self.msb - 1) - 2 ** self.lsb
-
-        q_log = tf.clip_by_value(q_log, min_val, max_val)
-
-
-
+        q_log = self.internal_quantizer(log_vals)
 
         y = tf.pow(2.0, q_log) * signs
-
 
         return tf.cast(y, self.dtype)
 

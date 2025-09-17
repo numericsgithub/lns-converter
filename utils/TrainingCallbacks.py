@@ -151,7 +151,8 @@ class TrainingCallbacks(callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
         model_base_path, MODEL_SAVEPATH, MODEL_SAVEPATH_Q, MODEL_SAVEPATH_BEST, MODEL_SAVEPATH_Q_BEST, MODEL_SAVEPATH_Q_FUSEB = DataPaths.get_model_paths(self.qTraining.args)
 
-        cur_acc = logs["val_fixed (strict) top 1"]
+        cur_acc = logs.get("val_fixed_(strict)_top_1",
+                           logs.get("val_fixed (strict) top 1"))
         cur_loss = logs["val_loss"]
         self.qTraining.last_logs.append(logs)
         cur_lr = float(np.array(self.model.optimizer.lr))

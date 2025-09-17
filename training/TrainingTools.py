@@ -60,6 +60,7 @@ class QTraining:
         self.NUM_CLASSES = NUM_CLASSES
         self.batch_size:int = batch_size
         self.args:dict = {}
+        self.model = None
 
     def apply_ptq(self, model) -> None:
         pass
@@ -171,6 +172,7 @@ class QTraining:
                 elif model_name != "LeNetLike":
                     model.loadVariablesNPZ(f"data/training/pretrained/pretrained_{args['model-name']}_without_bn.npz", try_load_quantizers=False)
 
+            self.model = model
             # all_quants = model.getQuantizers()
             # all_quants_2 = find_instances_of_my_class_a(model)
             # print("ALL QUANTIZERS", len(all_quants), [q.name for q in all_quants])
@@ -267,7 +269,7 @@ class QTraining:
                 f.write(f"{MODEL_SAVEPATH} | {model_load_path} | {str(args)} | {str(evaluation_results)}\n")
             with open(datpat("training/after_train_best_results.txt"), "a") as f:
                 f.write(f"{MODEL_SAVEPATH} | {model_load_path} | {str(args)} | {str(training_callbacks_data.best_acc_results)} | {str(extra_info)}\n")
-                trep.sendModelReport(model_name, args, f"Best Result is {training_callbacks_data.best_acc_results['val_fixed (strict) top 1']} fp32 would be {self.get_top1_float()}")
+                trep.sendModelReport(model_name, args, f"Best Result is {training_callbacks_data.best_acc_results.get('val_fixed_(strict)_top_1',training_callbacks_data.best_acc_results.get('val_fixed (strict) top 1'))} fp32 would be {self.get_top1_float()}")
             with open(model_base_path.format("extra_info.txt"), "w") as f:
                 f.write(str(extra_info))
             print(evaluation_results)
@@ -283,7 +285,7 @@ class QTraining:
                             help="Short description. A folder with the description as a name will contain all files generated")
         parser.add_argument("--checkpoint", dest="checkpoint",
                             help="Checkpoint file to load")
-        parser.add_argument("-tt", "--train-type", choices=["float", "fixed", "adder"], dest="train-type",
+        parser.add_argument("-tt", "--train-type", choices=["float", "fixed", "adder", "lns"], dest="train-type",
                             required=True,
                             help="Set what kind of quantizers you want to choose. Either none at all, fixed or adder aware")
 
@@ -316,7 +318,9 @@ class QTraining:
         parser.add_argument('-mobnet-alpha', type=float, dest="mobnet_alpha", default=None)
         parser.add_argument('-opt', choices=["adam", "sgd"], dest="opt", required=False, default="adam",
                             help="Set optimizer")
-
+        parser.add_argument("--lns-format", type=str, default="sfix", help="LNS format: sfix or ufix")
+        parser.add_argument("--lns-lsb", type=int, default=-3, help="Least significant bit for LNS quantizer")
+        parser.add_argument("--lns-msb", type=int, default=1, help="Most significant bit for LNS quantizer")
         _ = parser.parse_args()
         args = {}
         for arg in vars(_):

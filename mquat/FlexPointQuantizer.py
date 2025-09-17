@@ -132,7 +132,7 @@ class FlexPointQuantizer(Quantizer):
         self.max_value.assign(tf.cast(max, dtype=self.dtype))
         self.b_frc.assign(tf.cast(b_frc, dtype=DEFAULT_DATATYPE))
 
-    @tf.function(jit_compile=True)
+    #@tf.function(jit_compile=False)
     def filterInputs(self, inputs, std_keep_factor):
         if std_keep_factor == 0.0:
             return inputs
@@ -152,7 +152,7 @@ class FlexPointQuantizer(Quantizer):
                   #         tf.clip_by_value(inputs, clip_min, clip_max))
         return clipped #kept#, clipped
 
-    @tf.function(autograph=False)
+    #@tf.function(autograph=False)
     def setBitsBeforeAndAfter(self, input_sample):
         inputs = input_sample
         inputs = tf.cond(tf.reduce_all(inputs == 0.0), lambda : tf.cast([-1.0/64, 1.0/64], inputs.dtype), lambda : inputs)
@@ -169,7 +169,7 @@ class FlexPointQuantizer(Quantizer):
         _2 = tf.cast(2, dtype=tf.float64)
 
         if True: #self.name.endswith("_out"):
-            @tf.function(jit_compile=True)
+            #@tf.function(jit_compile=False)
             def quantize(min, max, step, inputs):
                 max = tf.cond(tf.reduce_all(tf.abs(inputs) == inputs), lambda :max + tf.abs(min), lambda :max)
                 min = tf.cond(tf.reduce_all(tf.abs(inputs) == inputs), lambda :tf.cast(0.0, min.dtype), lambda :min)
@@ -354,7 +354,7 @@ class FlexPointQuantizer(Quantizer):
         rounded = tf.floor(tmp + 0.5)
         return rounded
 
-    @tf.function(jit_compile=True)
+    #@tf.function(jit_compile=True)
     def quant_forward(self, inputs):
         ## tf.print(self.name, "TESTSETST1", tf.size(tf.unique(tf.reshape(inputs, [-1])).y), tf.unique(tf.reshape(inputs, [-1])).y)
         epsilon = tf.cast(0.001, DEFAULT_DATATYPE)

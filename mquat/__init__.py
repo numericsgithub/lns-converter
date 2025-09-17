@@ -26,7 +26,7 @@ from mquat.FixedPointQuantizer import FixedPointQuantizer
 from mquat.FixedToLogQuantizer import FixedToLogQuantizer
 from mquat.FloatingPointQuantizer import FloatingPointQuantizer
 from mquat.FloatingPointQuantizerFormats import FloatingPointQuantizerFormats
-
+from mquat.LNSQuantizer import LNSQuantizer
 
 from mquat.FlexPointQuantizer import FlexPointQuantizer
 from mquat.FlattenLayer import FlattenLayer
