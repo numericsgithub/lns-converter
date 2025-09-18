@@ -6,9 +6,9 @@ echo ">>> Running TrainLeNet.py with LNS settings..."
 python3 ./TrainLeNet.py \
   -tt lns \
   -qd layer-wise \
-  -b-bits 2 \
-  -w-bits 2 \
-  -a-bits 2 \
+  -b-bits 10 \
+  -w-bits 3 \
+  -a-bits 3 \
   --lns-format sfix \
   -lr 0.0001 \
   -no-skip \

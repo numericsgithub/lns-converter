@@ -185,12 +185,12 @@ class TrainLeNet(QTraining):
 
     def get_epochs_and_lrs(self, base_lr):
         if self.args["train-type"] == "float":
-            EPOCHS_LRS = [(1, base_lr*10), (45, base_lr), (15, base_lr/10), (10, base_lr/100)]
+            EPOCHS_LRS = [(1, base_lr*10), (40, base_lr), (15, base_lr/10), (10, base_lr/100)]
         elif self.args["train-type"] == "fixed":
             EPOCHS_LRS = [(1, base_lr), (19, base_lr), (20,base_lr/10), (10, base_lr/100)]
         elif self.args["train-type"] == "lns":
             # Train for 40 epochs at constant LR
-            EPOCHS_LRS = [(10, base_lr)]
+            EPOCHS_LRS = [(40, base_lr)]
         elif self.args["train-type"] == "adder":
             EPOCHS_LRS = [(10, base_lr*10), (10, base_lr), (10, base_lr/10), (10, base_lr/100)]
         else:
