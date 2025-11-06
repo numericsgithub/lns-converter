@@ -220,22 +220,12 @@ class DenseLayer(ComplexLayer):
                 the output of the layer.
         """
         tmp = self.quant_in(inputs)
-        if DenseLayer.GLOBAL_DEBUG_OUTPUT:
-            tf.print(self.name, "input: ", tmp, summarize=-1, output_stream="file://" + DenseLayer.GLOBAL_DEBUG_OUTPUT_FILEPATH)
         tmp = self.mat_mul([tmp, self.w()])
-        if DenseLayer.GLOBAL_DEBUG_OUTPUT:
-            tf.print(self.name, "after matmul: ", tmp, summarize=-1, output_stream="file://" + DenseLayer.GLOBAL_DEBUG_OUTPUT_FILEPATH)
         if self.b != None:
             tmp = self.bias_add([tmp, self.b()])
-        if DenseLayer.GLOBAL_DEBUG_OUTPUT:
-            tf.print(self.name, "after bias add: ", tmp, summarize=-1, output_stream="file://" + DenseLayer.GLOBAL_DEBUG_OUTPUT_FILEPATH)
         if self.batch_norm != None:
             tmp = self.batch_norm(tmp, training)
-            if DenseLayer.GLOBAL_DEBUG_OUTPUT:
-                tf.print(self.name, "after bnorm: ", tmp, summarize=-1, output_stream="file://" + DenseLayer.GLOBAL_DEBUG_OUTPUT_FILEPATH)
         tmp = self.activation(tmp)
-        if DenseLayer.GLOBAL_DEBUG_OUTPUT:
-            tf.print(self.name, "after activation: ", tmp, summarize=-1, output_stream="file://" + DenseLayer.GLOBAL_DEBUG_OUTPUT_FILEPATH)
         # tmp = self.quant_out(tmp)
         # test = tf.unique(tf.reshape(tmp, [-1])).y
         # tf.print("DENSE OUT", self.name, tf.size(test), tf.sort(test), summarize=-1)

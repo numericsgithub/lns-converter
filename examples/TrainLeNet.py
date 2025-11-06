@@ -81,7 +81,7 @@ class TrainLeNet(QTraining):
 
         quant_depth = args["quant-depth"]
 
-        def quant_Conv(conv, conv_name, filters, input_channels, use_adder, special=False):
+        def quant_Conv(conv, conv_name, filters, input_channels, use_adder, is_first=False):
             if args["no-weight"] != True:
                 if quant_depth == "kernel-wise":
                     conv.f.quant_out = mq.PerKernelQuantizer(f"{conv_name}_kw_f", get_quantizer, 3, filters, 2, input_channels)
@@ -94,7 +94,8 @@ class TrainLeNet(QTraining):
             if args["no-bias"] != True:
                 conv.b.quant_out = mq.FlexPointQuantizer(f"{conv_name}_b", bias_bits_total)
             if args["no-activation"] != True:
-                conv.quant_in = mq.FlexPointQuantizer(f"{conv_name}_out", activation_bits_total)
+                if is_first:
+                    conv.quant_in = mq.FlexPointQuantizer(f"{conv_name}_out", activation_bits_total)
                 conv.quant_out = mq.FlexPointQuantizer(f"output_{conv_name}_out", activation_bits_total)
 
         def quant_Dense(dense, dense_name, neurons, use_adder):
@@ -107,12 +108,12 @@ class TrainLeNet(QTraining):
                     raise Exception(f"Unkwon quant_depth {quant_depth}")
             if args["no-bias"] != True:
                 dense.b.quant_out = mq.FlexPointQuantizer(f"{dense_name}_b", bias_bits_total)
-            if args["no-activation"] != True:
-                dense.quant_in = mq.FlexPointQuantizer(f"{dense_name}_out", activation_bits_total)
+            # if args["no-activation"] != True:
+            #     dense.quant_in = mq.FlexPointQuantizer(f"{dense_name}_out", activation_bits_total)
 
         if selected_train_type in ("fixed", "adder", "lns"):
             use_adder = selected_train_type == "adder"
-            quant_Conv(model.conv1, "QuantConv1", 8, 1, use_adder)
+            quant_Conv(model.conv1, "QuantConv1", 8, 1, use_adder, is_first=True)
             quant_Conv(model.conv2, "QuantConv2", 16, 8, use_adder)
             quant_Dense(model.dense1, "QuantDense1", 10, use_adder)
         elif selected_train_type == "float":
