@@ -114,7 +114,7 @@ class FlexPointQuantizer(Quantizer):
     def isNonUniform(self):
         return False
 
-    def set_b_frac(self, b_frc):
+    def set_b_frac(self, b_frc, is_unsigned=False):
         t = tf.cast(self.total_bits, tf.float64)
         _05 = tf.cast(0.5, dtype=tf.float64)
         _1 = tf.cast(1, dtype=tf.float64)
@@ -127,6 +127,10 @@ class FlexPointQuantizer(Quantizer):
         else:
             max = -min
         inv_step = tf.cast(tf.pow(tf.cast(2, dtype=tf.int64), tf.cast(tf.abs(b_frc), dtype=tf.int64)), dtype=tf.float64)
+
+        max = tf.cond(is_unsigned, lambda: max + tf.abs(min), lambda: max)
+        min = tf.cond(is_unsigned, lambda: tf.cast(0.0, min.dtype), lambda: min)
+
         self.maybe_inversed_step_diff.assign(tf.cast(inv_step, dtype=tf.float32))
         self.min_value.assign(tf.cast(min, dtype=self.dtype))
         self.max_value.assign(tf.cast(max, dtype=self.dtype))
@@ -245,7 +249,10 @@ class FlexPointQuantizer(Quantizer):
             #result = tf.reshape(result, [tf.size(result)])
             #results_rev = tf.reverse(result, axis=0)
 
-            if not self.name.endswith("_out"):
+            if self.name.endswith("_lns"):
+                result = sad
+                best_last_index = tf.cast(tf.shape(result)[0], tf.int64) - tf.argmin(tf.reverse(result, [0]), axis=0)-1 + tf.cond(tf.reduce_all(tf.abs(inputs) == inputs), lambda :0, lambda :-1)
+            elif not self.name.endswith("_out"):
                 result = sad
                 # max_field = tf.cast(tf.floor((tf.reduce_sum(tf.where(tf.reduce_max(result) == result, 1.0, 0.0)) - 1.0) / 2.0 + 0.5), tf.int64)
                 # max_field = tf.minimum(max_field, 1)
@@ -261,13 +268,6 @@ class FlexPointQuantizer(Quantizer):
             #best_last_index = tf.cond(tf.all(result == 1), lambda : tf.cast(1 + int_frac_extension + t, tf.int64), lambda : best_last_index)
             best_std_filter = tf.reduce_max(tf.gather(std_filter, best_last_index)) # tf.reduce_max is only there to enforce a scalar and not [1] shape
             tf.print(self.name, q_high)
-            tf.print(self.name, "CHOSEN INDEX WAS, ", best_last_index,
-                     "sad:", tf.reshape(tf.gather(sad, best_last_index), [-1]),
-                     "verity:", tf.reshape(tf.gather(verity, best_last_index), [-1]),
-                     "std_filter:", best_std_filter,
-                     "q_low:", tf.reshape(tf.gather(q_low, best_last_index), [-1]),
-                     "q_high:", tf.reshape(tf.gather(q_high, best_last_index), [-1]),
-                     "q_step:", tf.reshape(tf.gather(q_step, best_last_index), [-1]))
 
             T_best = tf.cast(1 - int_frac_extension - t + tf.cast(best_last_index, tf.float64), dtype=tf.float64)
             best_l = -tf.pow(_2, T_best - _1)
@@ -278,6 +278,14 @@ class FlexPointQuantizer(Quantizer):
 
             best_h = tf.cond(tf.reduce_all(tf.abs(inputs) == inputs), lambda :best_h + tf.abs(best_l), lambda :best_h)
             best_l = tf.cond(tf.reduce_all(tf.abs(inputs) == inputs), lambda :tf.cast(0.0, best_l.dtype), lambda :best_l)
+
+            tf.print(self.name, "CHOSEN INDEX WAS, ", best_last_index,
+                     "sad:", tf.reshape(tf.gather(sad, best_last_index), [-1]),
+                     "verity:", tf.reshape(tf.gather(verity, best_last_index), [-1]),
+                     "std_filter:", best_std_filter,
+                     "min_val:", best_l,
+                     "max_val:", best_h,
+                     "q_step:", tf.reshape(tf.gather(q_step, best_last_index), [-1]))
 
 
             self.maybe_inversed_step_diff.assign(tf.cast(best_abs_step, dtype=tf.float32))
@@ -356,16 +364,10 @@ class FlexPointQuantizer(Quantizer):
 
     #@tf.function(jit_compile=True)
     def quant_forward(self, inputs):
-        ## tf.print(self.name, "TESTSETST1", tf.size(tf.unique(tf.reshape(inputs, [-1])).y), tf.unique(tf.reshape(inputs, [-1])).y)
         epsilon = tf.cast(0.001, DEFAULT_DATATYPE)
 
-        #inputs = self.filterInputs(inputs, self.best_std_filter)
-
         tmp = tf.clip_by_value(inputs, self.min_value, self.max_value)
-        ## tf.print(self.name, "TESTSETST2", tf.size(tf.unique(tf.reshape(tmp, [-1])).y), tf.unique(tf.reshape(tmp, [-1])).y)
         tmp = (tmp - self.min_value)
-        ## tf.print(self.name, "TESTSETST3", tf.size(tf.unique(tf.reshape(tmp, [-1])).y), tf.unique(tf.reshape(tmp, [-1])).y)
-        ## tf.print(self.name, "self.maybe_inversed_step_diff", self.maybe_inversed_step_diff, self.min_value, self.max_value)
         tmp = tf.cond(self.b_frc >= 0, lambda: tf.cast(tmp, tf.float32) * self.maybe_inversed_step_diff,
                       lambda: tf.cast(tmp, tf.float32) / self.maybe_inversed_step_diff)
         if self.round_to_nearest:
@@ -375,7 +377,6 @@ class FlexPointQuantizer(Quantizer):
 
         rounded = tf.cond(self.b_frc >= 0, lambda: rounded / self.maybe_inversed_step_diff,
                           lambda: rounded * self.maybe_inversed_step_diff) + tf.cast(self.min_value, tf.float32)
-        ## tf.print(self.name, "TESTSETST6", tf.size(tf.unique(tf.reshape(rounded, [-1])).y), tf.unique(tf.reshape(rounded, [-1])).y)
         rounded = tf.cast(rounded, DEFAULT_DATATYPE)
         return rounded
 

@@ -22,7 +22,7 @@ import tensorflow as tf  # noqa: E402
 # Then, train the model with some quantization (QAT - quantization aware training)
 # Replace this fixed-point training with your LNS training.
 # Example:
-# -tt lns -qd layer-wise -b-bits 5 -w-bits 5 -a-bits 5 --lns-format sfix --lns-lsb -3 --lns-msb 1 -lr 0.0001 -no-skip -desc test5
+# -tt lns -qd layer-wise -b-bits 5 -w-bits 5 -a-bits 5 --lns-format sfix -lr 0.0001 -no-skip -desc test5
 
 
 def strict_top1_with_tolerance(tol=1e-4, name="fixed_(strict)_top_1"):
@@ -65,7 +65,7 @@ class TrainLeNet(QTraining):
         return  # No post training quantization here
 
     def quantize_model(self, model, selected_train_type, weights_bits_total, bias_bits_total,
-                       activation_bits_total, adder, std_keep_factor, quantize_actication) -> None:
+                       activation_bits_total, product_bits, adder, std_keep_factor, quantize_actication) -> None:
         args = self.args
         print("SELECTED selected_train_type", selected_train_type, f"and adder is \"{adder}\"")
 
@@ -76,12 +76,12 @@ class TrainLeNet(QTraining):
             if selected_train_type == "lns":
                 # LNSQuantizer expects an internal quantizer (use FlexPointQuantizer)
                 internal_q = mq.FlexPointQuantizer(name + suffix + "_internal", weights_bits_total)
-                return mq.LNSQuantizer(name + suffix, internal_q, internal_dtype=tf.dtypes.float32)
+                return mq.LNSQuantizer(name + suffix, internal_q, exponent_dtype=tf.dtypes.float32)
             return mq.AddQuantizer(name + suffix, str(adder) + "Add" + str(weights_bits_total))
 
         quant_depth = args["quant-depth"]
 
-        def quant_Conv(conv, conv_name, filters, input_channels, use_adder, is_first=False):
+        def quant_Conv(conv, conv_name, filters, input_channels, use_adder):
             if args["no-weight"] != True:
                 if quant_depth == "kernel-wise":
                     conv.f.quant_out = mq.PerKernelQuantizer(f"{conv_name}_kw_f", get_quantizer, 3, filters, 2, input_channels)
@@ -91,11 +91,11 @@ class TrainLeNet(QTraining):
                     conv.f.quant_out = get_quantizer(f"{conv_name}_f", no_chan=True)
                 else:
                     raise Exception(f"Unkwon quant_depth \"{quant_depth}\"")
+                conv.conv2d.mat_mul.quant_mul = mq.FlexPointQuantizer(f"{conv_name}_products", product_bits)
             if args["no-bias"] != True:
                 conv.b.quant_out = mq.FlexPointQuantizer(f"{conv_name}_b", bias_bits_total)
             if args["no-activation"] != True:
-                if is_first:
-                    conv.quant_in = mq.FlexPointQuantizer(f"{conv_name}_out", activation_bits_total)
+                conv.quant_in = get_quantizer(f"{conv_name}_out", no_chan=True)
                 conv.quant_out = mq.FlexPointQuantizer(f"output_{conv_name}_out", activation_bits_total)
 
         def quant_Dense(dense, dense_name, neurons, use_adder):
