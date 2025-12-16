@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Vivado temporary files
+*.jou
+*.pb
+*.log
+xsim.dir/
+*.dcp
+*.rpt
+
+# Build artifacts
+build/
+*.xpr
+*.xpr.backup
+
+docs/
+sample.md
+
+# Simulation artifacts
+xsim.dir/
+*.wdb
+*.wcfg
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Temporary files
+clockInfo.txt
+dfx_runtime.txt
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
