@@ -51,6 +51,9 @@ py_scripts/
 
 1. **FloPoCo running in Docker** (or local installation)
 2. **Xilinx Vivado** installed and environment sourced
+3. **FloPoCo workspace directory**: The script expects a FloPoCo directory at `../flopoco` (relative to `flopoco-vivado-automation`). This directory is used as a Docker volume mount where FloPoCo will generate VHDL files. You can either:
+   - Create an empty directory at the expected location: `lns-converter/flopoco`
+   - Or use the `--flopoco-dir` argument to specify a different path
 
 ### Setting Up Vivado Environment
 
@@ -70,11 +73,12 @@ source /d/Xilinx/2025.1.1/Vivado/settings64.sh
 source /d/Xilinx/2025.1.1/Vivado/settings64.sh
 
 # Then run the automation
+# If your FloPoCo directory is in a different location, use --flopoco-dir:
 python scripts/automation/automate_flow.py \
     --function 'log(x+0.0001)/log(2)' \
     --lsb-in -6 \
     --lsb-out -6 \
-    --part xc7k70tfbg484-3
+    --flopoco-dir /path/to/your/flopoco/directory
 ```
 
 ### Plotting Results
